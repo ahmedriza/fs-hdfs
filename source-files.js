@@ -1,7 +1,7 @@
 var N = null;var sourcesIndex = {};
 sourcesIndex["cfg_if"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["form_urlencoded"] = {"name":"","files":["lib.rs"]};
-sourcesIndex["hdfs"] = {"name":"","files":["err.rs","hdfs.rs","lib.rs","minidfs.rs","native.rs"]};
+sourcesIndex["hdfs"] = {"name":"","files":["err.rs","hdfs.rs","lib.rs","minidfs.rs","native.rs","util.rs"]};
 sourcesIndex["idna"] = {"name":"","files":["lib.rs","punycode.rs","uts46.rs"]};
 sourcesIndex["lazy_static"] = {"name":"","files":["inline_lazy.rs","lib.rs"]};
 sourcesIndex["libc"] = {"name":"","dirs":[{"name":"unix","dirs":[{"name":"bsd","dirs":[{"name":"apple","dirs":[{"name":"b64","dirs":[{"name":"x86_64","files":["align.rs","mod.rs"]}],"files":["mod.rs"]}],"files":["mod.rs"]}],"files":["mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["fixed_width_ints.rs","lib.rs","macros.rs"]};

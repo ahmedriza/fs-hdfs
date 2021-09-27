@@ -96,6 +96,7 @@
 <span id="96">96</span>
 <span id="97">97</span>
 <span id="98">98</span>
+<span id="99">99</span>
 </pre><pre class="rust">
 <span class="comment">// Licensed to the Apache Software Foundation (ASF) under one</span>
 <span class="comment">// or more contributor license agreements.  See the NOTICE file</span>
@@ -185,16 +186,17 @@
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
 
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deref_nullptr</span>)]</span>
 <span class="kw">mod</span> <span class="ident">native</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">err</span>;
 <span class="doccomment">/// Rust APIs wrapping libhdfs API, providing better semantic and abstraction</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">hdfs</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test_util&quot;</span>)]</span>
 <span class="doccomment">/// Mainly for unit test</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">minidfs</span>;
-
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">test</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;test_util&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">util</span>;
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hdfs" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>

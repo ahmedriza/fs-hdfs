@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["new_mini_dfs_conf",""]],"struct":[["MiniDFS",""]]});
+initSidebarItems({"fn":[["get_dfs",""]],"struct":[["MiniDFS",""]]});
