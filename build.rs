@@ -29,9 +29,10 @@ fn main() {
     // bindings manually to avoid problems where some
     // systems may not have the clang libraries required
     // by `bindgen` to parse C and C++ headers.
-    build_ffi(vec_flags);
+    // build_ffi(vec_flags);
 }
 
+#[allow(unused)]
 fn build_ffi(flags: &[String]) {
     let (header, output) = ("c_src/wrapper.h", "hdfs-native.rs");
     // Tell cargo to invalidate the built crate whenever the wrapper changes
@@ -63,6 +64,9 @@ fn build_ffi(flags: &[String]) {
 
 fn build_hdfs_lib(flags: &[String]) {
     println!("cargo:rerun-if-changed={}", get_hdfs_file_path("hdfs.c"));
+
+    // To avoid the order issue of dependent dynamic libraries
+    println!("cargo:rustc-link-lib=jvm");
 
     let mut builder = cc::Build::new();
 
