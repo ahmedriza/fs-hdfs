@@ -17,4 +17,10 @@
 
 #![allow(unused_imports)]
 #![allow(dead_code)]
-include!(concat!(env!("OUT_DIR"), "/hdfs-native.rs"));
+
+// Include the bindings directly instead of autogenerating them
+// at build time. This is because some systems may not have the
+// required clang runtime libraries such as `libclangAST.so` etc
+// that are used by `bindgen` to parse C and C++ headers.
+// include!(concat!(env!("OUT_DIR"), "/hdfs-native.rs"));
+include!("hdfs-native.rs");

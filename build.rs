@@ -25,6 +25,10 @@ fn main() {
 
     build_minidfs_lib(vec_flags);
 
+    // disable this for now and include the generated 
+    // bindings manually to avoid problems where some
+    // systems may not have the clang libraries required
+    // by `bindgen` to parse C and C++ headers.
     build_ffi(vec_flags);
 }
 
