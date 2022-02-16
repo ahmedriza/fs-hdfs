@@ -846,26 +846,27 @@ fn create_hdfs_fs(
         let cstr_host =
             CString::new(connection_properties.namenode_host.as_bytes()).unwrap();
         hdfsBuilderSetNameNode(hdfs_builder, cstr_host.as_ptr());
-        
+
         hdfsBuilderSetNameNodePort(hdfs_builder, connection_properties.namenode_port);
 
-        if let Some(user) = connection_properties.namenode_user.clone() {
-            info!("User: {}", user);
-            let cstr_user = CString::new(user.as_bytes()).unwrap();
-            hdfsBuilderSetUserName(hdfs_builder, cstr_user.as_ptr());
-        }
+        let cstr_user = if let Some(user) = connection_properties.namenode_user.clone() {
+            CString::new(user.as_bytes()).unwrap()
+        } else {
+            CString::new("".as_bytes()).unwrap()
+        };
+        hdfsBuilderSetUserName(hdfs_builder, cstr_user.as_ptr());
 
-        if let Some(kerb_ticket_cache_path) =
+        let cstr_kerb_ticket_cache_path = if let Some(kerb_ticket_cache_path) =
             connection_properties.kerberos_ticket_cache_path.clone()
         {
-            info!("kerb_ticket_cache_path: {}", kerb_ticket_cache_path);
-            let cstr_kerb_ticket_cache_path =
-                CString::new(kerb_ticket_cache_path.as_bytes()).unwrap();
-            hdfsBuilderSetKerbTicketCachePath(
-                hdfs_builder,
-                cstr_kerb_ticket_cache_path.as_ptr(),
-            );
-        }
+            CString::new(kerb_ticket_cache_path.as_bytes()).unwrap()
+        } else {
+            CString::new("".as_bytes()).unwrap()
+        };
+        hdfsBuilderSetKerbTicketCachePath(
+            hdfs_builder,
+            cstr_kerb_ticket_cache_path.as_ptr(),
+        );
 
         info!(
             "Connecting to Namenode, host: {}, port: {}, user: {:?}, krb_ticket_cache: {:?}",
