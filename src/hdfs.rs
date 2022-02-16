@@ -837,26 +837,30 @@ fn create_hdfs_fs(
     let hdfs_fs = unsafe {
         let hdfs_builder = hdfsNewBuilder();
 
-        let cstr_host =
-            CString::new(connection_properties.namenode_host.as_bytes()).unwrap();
         for (k, v) in hdfs_params {
             let cstr_k = CString::new(k).unwrap();
             let cstr_v = CString::new(v).unwrap();
             hdfsBuilderConfSetStr(hdfs_builder, cstr_k.as_ptr(), cstr_v.as_ptr());
         }
+
+        let cstr_host =
+            CString::new(connection_properties.namenode_host.as_bytes()).unwrap();
         hdfsBuilderSetNameNode(hdfs_builder, cstr_host.as_ptr());
+        
         hdfsBuilderSetNameNodePort(hdfs_builder, connection_properties.namenode_port);
 
         if let Some(user) = connection_properties.namenode_user.clone() {
-            let cstr_user = CString::new(user).unwrap();
+            info!("User: {}", user);
+            let cstr_user = CString::new(user.as_bytes()).unwrap();
             hdfsBuilderSetUserName(hdfs_builder, cstr_user.as_ptr());
         }
 
         if let Some(kerb_ticket_cache_path) =
             connection_properties.kerberos_ticket_cache_path.clone()
         {
+            info!("kerb_ticket_cache_path: {}", kerb_ticket_cache_path);
             let cstr_kerb_ticket_cache_path =
-                CString::new(kerb_ticket_cache_path).unwrap();
+                CString::new(kerb_ticket_cache_path.as_bytes()).unwrap();
             hdfsBuilderSetKerbTicketCachePath(
                 hdfs_builder,
                 cstr_kerb_ticket_cache_path.as_ptr(),
