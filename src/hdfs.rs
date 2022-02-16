@@ -848,7 +848,7 @@ fn create_hdfs_fs(
         hdfsBuilderSetNameNodePort(hdfs_builder, connection_properties.namenode_port);
 
         if let Some(user) = connection_properties.namenode_user.clone() {
-            let cstr_user = CString::new(user.as_bytes()).unwrap();
+            let cstr_user = CString::new(user).unwrap();
             hdfsBuilderSetUserName(hdfs_builder, cstr_user.as_ptr());
         }
 
@@ -856,7 +856,7 @@ fn create_hdfs_fs(
             connection_properties.kerberos_ticket_cache_path.clone()
         {
             let cstr_kerb_ticket_cache_path =
-                CString::new(kerb_ticket_cache_path.as_bytes()).unwrap();
+                CString::new(kerb_ticket_cache_path).unwrap();
             hdfsBuilderSetKerbTicketCachePath(
                 hdfs_builder,
                 cstr_kerb_ticket_cache_path.as_ptr(),
