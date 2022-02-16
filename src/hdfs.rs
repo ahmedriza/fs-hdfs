@@ -36,8 +36,27 @@ const O_RDONLY: c_int = 0;
 const O_WRONLY: c_int = 1;
 const O_APPEND: c_int = 1024;
 
+/// Encapsulate Namenode connection properties. This is strictly for the "hdfs://" protocol. 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct ConnectionProperties {
+    pub namenode_host: String,
+    pub namenode_port: u16,
+    pub namenode_user: Option<String>,
+    pub kerberos_ticket_cache_path: Option<String>,
+}
+
+/// since HDFS client handles are completely thread safe, here we implement Send+Sync trait
+/// for HdfsFs
+unsafe impl Send for HdfsFs {}
+unsafe impl Sync for HdfsFs {}
+
 lazy_static! {
     static ref HDFS_CACHE: RwLock<HashMap<String, HdfsFs>> = RwLock::new(HashMap::new());
+}
+
+lazy_static! {
+    static ref HDFS_CONNECTION_CACHE: RwLock<HashMap<ConnectionProperties, HdfsFs>> =
+        RwLock::new(HashMap::new());
 }
 
 /// Hdfs Filesystem
@@ -100,6 +119,49 @@ impl HdfsFs {
             cache.insert(namenode_uri.clone(), hdfs_fs.clone());
             Ok(hdfs_fs)
         };
+    }
+
+    /// Create an instance of HdfsFs. A global cache is used to ensure that only one instance
+    /// is created for the same set of connection properties.
+    ///
+    /// * connection_properties - Namenode connection parameters
+    /// * hdfs_params - optional key value pairs that need to be passed to configure
+    ///   the HDFS client side.
+    ///   Example: key = 'dfs.domain.socket.path', value = '/var/lib/hadoop-fs/dn_socket'    
+    pub fn new_with_hdfs_params(
+        connection_properties: ConnectionProperties,
+        hdfs_params: HashMap<String, String>,
+    ) -> Result<HdfsFs, HdfsErr> {
+        // Try to get from cache if an entry exists.
+        {
+            let cache = HDFS_CONNECTION_CACHE
+                .read()
+                .expect("Could not aquire read lock on HDFS cache");
+            if let Some(hdfs_fs) = cache.get(&connection_properties) {
+                return Ok(hdfs_fs.clone());
+            }
+        }
+
+        let mut cache = HDFS_CONNECTION_CACHE
+            .write()
+            .expect("Could not aquire write lock on HDFS cache");
+        let hdfsFs = cache
+            .entry(connection_properties.clone())
+            .or_insert_with(|| {
+                let hdfs_fs = create_hdfs_fs(connection_properties.clone(), hdfs_params)
+                    .expect("Could not create HDFS connection");
+                HdfsFs {
+                    url: format!(
+                        "hdfs://{}:{}",
+                        connection_properties.namenode_host,
+                        connection_properties.namenode_port
+                    ),
+                    raw: hdfs_fs,
+                    _marker: PhantomData,
+                }
+            });
+
+        Ok(hdfsFs.clone())
     }
 
     /// The default NameNode configuration will be used (from the XML configuration files)
@@ -419,11 +481,6 @@ impl HdfsFs {
         }
     }
 }
-
-/// since HDFS client handles are completely thread safe, here we implement Send+Sync trait for HdfsFs
-unsafe impl Send for HdfsFs {}
-
-unsafe impl Sync for HdfsFs {}
 
 /// open hdfs file
 #[derive(Clone)]
@@ -767,6 +824,64 @@ pub fn get_uri(path: &str) -> Result<String, HdfsErr> {
         Err(_) => Err(HdfsErr::InvalidUrl(path.to_string())),
     }
 }
+
+/// Create an instance of hdfsFs.
+///
+/// * connection_properties - Namenode connection parameters
+/// * hdfs_params - optional key value pairs that need to be passed to configure
+///   the HDFS client side
+fn create_hdfs_fs(
+    connection_properties: ConnectionProperties,
+    hdfs_params: HashMap<String, String>,
+) -> Result<hdfsFS, HdfsErr> {
+    let hdfs_fs = unsafe {
+        let hdfs_builder = hdfsNewBuilder();
+
+        let cstr_host =
+            CString::new(connection_properties.namenode_host.as_bytes()).unwrap();
+        for (k, v) in hdfs_params {
+            let cstr_k = CString::new(k).unwrap();
+            let cstr_v = CString::new(v).unwrap();
+            hdfsBuilderConfSetStr(hdfs_builder, cstr_k.as_ptr(), cstr_v.as_ptr());
+        }
+        hdfsBuilderSetNameNode(hdfs_builder, cstr_host.as_ptr());
+        hdfsBuilderSetNameNodePort(hdfs_builder, connection_properties.namenode_port);
+
+        if let Some(user) = connection_properties.namenode_user {
+            let cstr_user = CString::new(user.as_bytes()).unwrap();
+            hdfsBuilderSetUserName(hdfs_builder, cstr_user.as_ptr());
+        }
+
+        if let Some(kerb_ticket_cache_path) =
+            connection_properties.kerberos_ticket_cache_path
+        {
+            let cstr_kerb_ticket_cache_path =
+                CString::new(kerb_ticket_cache_path.as_bytes()).unwrap();
+            hdfsBuilderSetKerbTicketCachePath(
+                hdfs_builder,
+                cstr_kerb_ticket_cache_path.as_ptr(),
+            );
+        }
+
+        info!(
+            "Connecting to Namenode, host: {}, port: {}",
+            connection_properties.namenode_host, connection_properties.namenode_port
+        );
+
+        hdfsBuilderConnect(hdfs_builder)
+    };
+
+    if hdfs_fs.is_null() {
+        Err(HdfsErr::CannotConnectToNameNode(format!(
+            "{}:{}",
+            connection_properties.namenode_host, connection_properties.namenode_port
+        )))
+    } else {
+        Ok(hdfs_fs)
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
 
 #[cfg(test)]
 mod test {

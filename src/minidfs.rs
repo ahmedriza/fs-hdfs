@@ -4,7 +4,8 @@
 //!
 //! Since it's not supported to create multiple MiniDFS instances for parallel testing,
 //! we only use a global one which can be get by ``get_dfs()``.
-//! And when it is finally destroyed, it's ``drop()`` method will be invoked so that users don't need to care about the resource releasing.
+//! And when it is finally destroyed, it's ``drop()`` method will be invoked so that users don't
+//! need to care about the resource releasing.
 //!
 //! ## Example
 //!
